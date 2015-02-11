@@ -10,7 +10,11 @@ import scrapy
 
 class DmozItem(scrapy.Item):
     title = scrapy.Field()
-    subtitle = scrapy.Field()
+    shirts = scrapy.Field()
     category = scrapy.Field()
-    review_link = scrapy.Field()
     price = scrapy.Field()
+
+
+class ColorItem(scrapy.Item):
+    color = scrapy.Field()
+    im_link = scrapy.Field()

@@ -3,6 +3,7 @@ import scrapy
 import urlparse
 
 from tutorial.items import DmozItem
+from tutorial.items import ColorItem
 
 
 class DmozSpider(scrapy.Spider):
@@ -20,13 +21,29 @@ class DmozSpider(scrapy.Spider):
                 link = ''.join(link).strip()
                 parsed_url = urlparse.urlparse(link)
                 # now add this url to iterate over
-                yield scrapy.Request("http://www.flipkart.com"+link)
+                yield scrapy.Request("http://www.flipkart.com" + link)
 
         else:
+            major_path = response.xpath('//div[@class="product-details line"]')
             item = DmozItem()
-            item['title'] = response.xpath('//div[@class="product-details line"]/div[1]/h1/text()').extract()
-            item['subtitle'] = response.xpath('//div[@class="product-details line"]/div[1]/span/text()').extract()
-            item['category'] = response.xpath('//div[@class="product-details line"]/div[1]/@data-pagename').extract()
-            item['review_link'] = response.xpath('//div[@class="reviews"]/a/@href').extract()
-            item['price'] = response.xpath('//span[@class="selling-price omniture-field"]/text()').extract()
+            item['title'] = major_path.xpath('div[1]/h1/text()').extract()
+            item['category'] = major_path.xpath('div[1]/@data-pagename').extract()
+            item['price'] = major_path.xpath('//span[@class="selling-price omniture-field"]/text()').extract()
+            shirts = []
+            default = ColorItem()
+            default['color'] = major_path.xpath(
+                'div[@class="multiSelectionWrapper section line"]/div[1]/div[2]/div/@title').extract()
+            default['im_link'] = major_path.xpath(
+                'div[@class="multiSelectionWrapper section line"]/div[1]/div[2]/div/div/@data-image').extract()
+            shirts.append(default)
+
+            for myp in major_path.xpath('//a[@class="multiSelectionWidget-selector-link"]'):
+                color = ColorItem()
+                shirt_link = myp.xpath('div/div/@data-image').extract()
+                shirt_link = ''.join(shirt_link).strip()
+                if shirt_link != '':
+                    color['color'] = myp.xpath('div/div/span/text()').extract()
+                    color['im_link'] = shirt_link
+                shirts.append(color)
+            item['shirts'] = shirts
             yield item
